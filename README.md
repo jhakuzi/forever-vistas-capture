@@ -25,3 +25,15 @@ The TOC targets Forever build 70170's interface `16001`. The [client-generated C
 **Not verified in the Forever client:** addon loading and TOC version on current builds; screenshot event delivery, timing and failure cases; map availability and world-coordinate correctness; binding and compartment registration; window rendering, copy selection, positioning and SavedVariables persistence. Test these in the actual client, including missing map coordinates and rapid requests. Changes to the client may require a TOC update.
 
 Run `lua tests/core.lua` from the repository root with a Lua interpreter to exercise encoding, bounded history and screenshot event handling. This does not substitute for client testing.
+
+## Launch-day smoke test
+
+1. Install the clean `ForeverVistasCapture` folder, restart the Forever client, and confirm the addon loads without errors and is enabled. Check the interface number against the launch client.
+2. Open `/fv` and the Addon Compartment entry; drag the window, reload, and confirm its position. Assign Capture Vista in Key Bindings.
+3. Capture using `/fv capture`, then the binding. Confirm each screenshot is saved and appears once in history; select a row and copy its FV1 code.
+4. Try an area without a map position, rapid requests, and a screenshot failure if practical. Confirm missing coordinates show as unavailable and no failed capture enters history. Reload and check persistence.
+5. Compare map and world values with the client's map in a known location. Verify timeout and late-event behavior if a result can be delayed safely.
+
+The build 70170 map reference documents the map functions and the Forever API notes report screenshot events; availability of timers, native frame templates, binding XML, automatic compartment registration, and the precise behavior of all these APIs in the launch client remain client verification items. Missing map data is encoded as `-`; malformed saved entries and invalid or non-finite coordinates are discarded. The original valid UI map ID is retained. World coordinates are omitted as a group if invalid; world values outside ±10,000,000 are rejected. Map percentages outside 0–100 are omitted as a pair. Epoch seconds must be an integer from 0 to 2147483647. If the timer or screenshot event registration is unavailable, capture is disabled. If a screenshot call errors after it might have started, the addon waits for a result or reload before accepting another request.
+
+Run both `lua tests/core.lua` and `lua tests/mock.lua` for the core and mocked client tests. These mocks do not verify client APIs. `Bindings.xml` is loaded by the client automatically and is deliberately not listed in the TOC.

@@ -2,7 +2,7 @@ local _, addon = ...
 local window, edit, rows, db
 
 function addon.Refresh()
-    if not window then return end
+    if not window or not rows then return end
     for i, row in ipairs(rows) do
         local c = db.history[i]
         if c then
@@ -17,7 +17,8 @@ end
 
 function addon.InitUI(saved)
     db = saved
-    window = CreateFrame("Frame", "ForeverVistasCaptureWindow", UIParent, "BasicFrameTemplateWithInset")
+    local frame = CreateFrame("Frame", "ForeverVistasCaptureWindow", UIParent, "BasicFrameTemplateWithInset")
+    window = frame
     window:SetSize(440, 370)
     window:SetPoint("CENTER", UIParent, "CENTER", saved.x or 0, saved.y or 0)
     window:SetMovable(true)
@@ -63,7 +64,7 @@ function addon.InitUI(saved)
 end
 
 function addon.Toggle()
-    if not window then return end
+    if not window or not rows or not edit then return end
     if window:IsShown() then window:Hide() else addon.Refresh(); window:Show() end
 end
 

@@ -7,4 +7,3 @@
 ## AddonCompartmentFunc: ForeverVistasCapture_CompartmentClick
 Core.lua
 UI.lua
-Bindings.xml
