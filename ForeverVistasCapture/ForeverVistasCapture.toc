@@ -1,0 +1,9 @@
+## Interface: 16001
+## Title: Forever Vistas Capture
+## Notes: Capture a screenshot and location for Forever Vistas
+## Version: 1.0.0
+## SavedVariables: ForeverVistasCaptureDB
+## IconTexture: Interface\Icons\INV_Misc_Spyglass_03
+## AddonCompartmentFunc: ForeverVistasCapture_CompartmentClick
+Core.lua
+UI.lua
