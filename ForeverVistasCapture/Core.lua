@@ -4,7 +4,7 @@ BINDING_NAME_FOREVERVISTAS_CAPTURE = "Capture Vista"
 
 local function number(value, places)
     if value == nil then return "-" end
-    return string.format("%.*f", places, value)
+    return string.format(places == 2 and "%.2f" or "%.1f", value)
 end
 
 function addon.Encode(c)
@@ -20,24 +20,43 @@ function addon.AddHistory(history, capture)
 end
 
 -- Screenshot events carry no request ID. Only one addon request may be pending.
-function addon.NewCaptureController(history, takeScreenshot, notify, changed)
-    local pending
+function addon.NewCaptureController(history, takeScreenshot, notify, changed, schedule)
+    local pending, expired
+    local generation = 0
     return {
         capture = function(capture)
+            if expired then
+                notify("Screenshot result overdue; wait for it or reload before capturing again.")
+                return false
+            end
             if pending then
                 notify("A screenshot is still pending; please wait.")
                 return false
             end
             pending = capture
+            generation = generation + 1
+            local request = generation
             local ok = pcall(takeScreenshot)
             if not ok then
                 pending = nil
                 notify("Screenshot request failed.")
                 return false
             end
+            schedule(15, function()
+                if pending and generation == request then
+                    pending = nil
+                    expired = true
+                    notify("Screenshot result timed out; wait for it or reload. No capture saved.")
+                end
+            end)
             return true
         end,
         event = function(event)
+            if expired and (event == "SCREENSHOT_SUCCEEDED" or event == "SCREENSHOT_FAILED") then
+                expired = false
+                notify("Late screenshot result ignored; capture is available again.")
+                return
+            end
             if not pending then return end
             if event == "SCREENSHOT_SUCCEEDED" then
                 addon.AddHistory(history, pending)
@@ -91,7 +110,7 @@ events:SetScript("OnEvent", function(_, event, name)
         db.history = type(db.history) == "table" and db.history or {}
         while #db.history > 20 do table.remove(db.history) end
         if successEvent and failureEvent and type(Screenshot) == "function" then
-            controller = addon.NewCaptureController(db.history, Screenshot, message, function() addon.Refresh() end)
+            controller = addon.NewCaptureController(db.history, Screenshot, message, function() addon.Refresh() end, C_Timer.After)
         else
             message("Screenshot events unavailable; capture is disabled.")
         end

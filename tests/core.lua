@@ -12,8 +12,10 @@ local history = {}
 for i = 1, 21 do addon.AddHistory(history, {timestamp=i}) end
 assert(#history == 20 and history[1].timestamp == 21 and history[20].timestamp == 2)
 local shots, changes, notices = 0, 0, {}
+local timers = {}
+local function schedule(_, fn) timers[#timers+1] = fn end
 local controller = addon.NewCaptureController(history, function() shots = shots + 1 end,
-    function(s) notices[#notices+1] = s end, function() changes = changes + 1 end)
+    function(s) notices[#notices+1] = s end, function() changes = changes + 1 end, schedule)
 assert(controller.capture(c))
 assert(not controller.capture({timestamp=2}) and shots == 1)
 controller.event("UNRELATED")
@@ -25,7 +27,14 @@ controller.event("SCREENSHOT_SUCCEEDED")
 assert(history[1] == c and #history == 20 and changes == 1)
 controller.event("SCREENSHOT_SUCCEEDED")
 assert(changes == 1)
-local broken = addon.NewCaptureController({}, function() error("failed") end, function() end, function() end)
+local broken = addon.NewCaptureController({}, function() error("failed") end, function() end, function() end, schedule)
 assert(not broken.capture(c))
 assert(not broken.capture(c))
+assert(controller.capture({timestamp=3}))
+timers[#timers]()
+assert(not controller.capture(c))
+controller.event("SCREENSHOT_SUCCEEDED")
+assert(history[1] == c and changes == 1)
+assert(controller.capture(c))
+controller.event("SCREENSHOT_FAILED")
 print("core tests passed")

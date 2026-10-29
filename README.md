@@ -10,7 +10,7 @@ Copy the `ForeverVistasCapture` folder into the Forever client's `Interface/AddO
 - `/fv` or the Forever Vistas Capture Addon Compartment entry toggles the history window. Select a row and press Ctrl+C in the highlighted code field. Drag the title bar to move the window.
 - In Key Bindings, assign **Capture Vista** under **Forever Vistas Capture**. There is no default shortcut. The normal screenshot key is not intercepted.
 
-One request can be pending at a time. Further requests are rejected until a success or failure event arrives. If an event never arrives, `/reload` clears the pending request. Screenshot events have no request identifier: a screenshot from another source while an addon capture is pending could be mistaken for its result. Avoid other screenshots until the confirmation message appears.
+One request can be pending at a time. Further requests are rejected until a success or failure event arrives. After 15 seconds without a result, the request expires without saving. Further captures remain blocked until the late result is ignored or `/reload` clears the state; this prevents a late event from confirming a newer request. Screenshot events have no request identifier: a screenshot from another source while an addon capture is pending could be mistaken for its result. Avoid other screenshots until the confirmation message appears.
 
 ## FV1 format
 
