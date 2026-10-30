@@ -5,162 +5,103 @@ BINDING_NAME_FOREVERVISTAS_CAPTURE = "Capture Vista"
 local function finite(n)
     return type(n) == "number" and n == n and n > -math.huge and n < math.huge
 end
-local function id(n)
+
+local function mapID(n)
     return finite(n) and n >= 0 and n <= 2147483647 and n == math.floor(n)
 end
+
 function addon.Clean(c)
-    if type(c) ~= "table" or not finite(c.timestamp) or c.timestamp < 0 or c.timestamp > 2147483647 or c.timestamp ~= math.floor(c.timestamp) then return nil end
-    local out = {timestamp = c.timestamp, zone = type(c.zone) == "string" and c.zone:sub(1, 120) or ""}
-    if id(c.mapID) then out.mapID = c.mapID end
-    if out.mapID and finite(c.x) and finite(c.y) and c.x >= 0 and c.x <= 100 and c.y >= 0 and c.y <= 100 then out.x, out.y = c.x, c.y end
-    if id(c.continentID) and finite(c.worldX) and finite(c.worldY) and math.abs(c.worldX) <= 10000000 and math.abs(c.worldY) <= 10000000 then
-        out.continentID, out.worldX, out.worldY = c.continentID, c.worldX, c.worldY
-    end
-    return out
+    if type(c) ~= "table" or not mapID(c.mapID) then return nil end
+    if not finite(c.x) or not finite(c.y) or c.x < 0 or c.x > 100 or c.y < 0 or c.y > 100 then return nil end
+    return {
+        mapID = c.mapID,
+        x = c.x,
+        y = c.y,
+        zone = type(c.zone) == "string" and c.zone:sub(1, 120) or "",
+    }
 end
-local function number(value, places)
-    if value == nil then return "-" end
-    return string.format(places == 2 and "%.2f" or "%.1f", value)
-end
+
+-- The numeric UI map ID identifies the zone. The site resolves it to its zone map.
 function addon.Encode(c)
     c = addon.Clean(c)
     if not c then return nil end
-    return table.concat({"FV1", c.mapID and string.format("%.0f", c.mapID) or "-",
-        number(c.x, 2), number(c.y, 2), string.format("%.0f", c.timestamp),
-        c.continentID and string.format("%.0f", c.continentID) or "-",
-        number(c.worldX, 1), number(c.worldY, 1)}, ":")
+    return string.format("FV2:%d:%.2f:%.2f", c.mapID, c.x, c.y)
 end
 
 function addon.AddHistory(history, capture)
     table.insert(history, 1, capture)
-    while #history > 20 do table.remove(history) end
+    while #history > 5 do table.remove(history) end
 end
 
--- Screenshot events carry no request ID. Only one addon request may be pending.
-function addon.NewCaptureController(history, takeScreenshot, notify, changed, schedule)
-    local pending, expired
-    local generation = 0
-    return {
-        capture = function(capture)
-            if expired then
-                notify("Screenshot result overdue; wait for it or reload before capturing again.")
-                return false
-            end
-            if pending then
-                notify("A screenshot is still pending; please wait.")
-                return false
-            end
-            pending = capture
-            generation = generation + 1
-            local request = generation
-            local scheduled = pcall(schedule, 15, function()
-                if pending and generation == request then
-                    pending = nil
-                    expired = true
-                    notify("Screenshot result timed out; wait for it or reload. No capture saved.")
-                end
-            end)
-            if not scheduled then
-                pending = nil
-                notify("Screenshot timer unavailable; capture cancelled.")
-                return false
-            end
-            local ok = pcall(takeScreenshot)
-            if not ok then
-                if pending and generation == request then pending = nil; expired = true end
-                notify("Screenshot request errored; wait for a result or reload.")
-                return false
-            end
-            return true
-        end,
-        event = function(event)
-            if expired and (event == "SCREENSHOT_SUCCEEDED" or event == "SCREENSHOT_FAILED") then
-                expired = false
-                notify("Late screenshot result ignored; capture is available again.")
-                return
-            end
-            if not pending then return end
-            if event == "SCREENSHOT_SUCCEEDED" then
-                addon.AddHistory(history, pending)
-                pending = nil
-                notify("Vista captured.")
-                changed()
-            elseif event == "SCREENSHOT_FAILED" then
-                pending = nil
-                notify("Screenshot failed; no capture saved.")
-            end
-        end,
-    }
+local function message(s)
+    print("|cff66ccffForever Vistas:|r " .. s)
 end
 
-local controller
-local function message(s) print("|cff66ccffForever Vistas:|r " .. s) end
 local function location()
-    local c = { timestamp = type(time) == "function" and time() or nil }
+    if type(C_Map) ~= "table" or type(C_Map.GetBestMapForUnit) ~= "function" or type(C_Map.GetPlayerMapPosition) ~= "function" then
+        return nil
+    end
+
+    local ok, id = pcall(C_Map.GetBestMapForUnit, "player")
+    if not ok or not mapID(id) then return nil end
+
+    local got, position = pcall(C_Map.GetPlayerMapPosition, id, "player")
+    if not got or not position then return nil end
+
+    local haveXY, x, y = pcall(function() return position:GetXY() end)
+    if not haveXY then return nil end
+
+    local zone = ""
     if type(GetRealZoneText) == "function" then
-        local ok, zone = pcall(GetRealZoneText)
-        if ok then c.zone = zone end
+        local haveZone, name = pcall(GetRealZoneText)
+        if haveZone then zone = name end
     end
-    if type(C_Map) == "table" and type(C_Map.GetBestMapForUnit) == "function" then
-        local ok, mapID = pcall(C_Map.GetBestMapForUnit, "player")
-        if ok and id(mapID) then
-            c.mapID = mapID
-            if type(C_Map.GetPlayerMapPosition) == "function" then
-                local got, pos = pcall(C_Map.GetPlayerMapPosition, mapID, "player")
-                if got and pos then
-                    local xy, x, y = pcall(function() return pos:GetXY() end)
-                    if xy and finite(x) and finite(y) then c.x, c.y = x * 100, y * 100 end
-                    if type(C_Map.GetWorldPosFromMapPos) == "function" then
-                        local worldOK, continent, world = pcall(C_Map.GetWorldPosFromMapPos, mapID, pos)
-                        if worldOK and world then
-                            local success, wx, wy = pcall(function() return world:GetXY() end)
-                            if success then c.continentID, c.worldX, c.worldY = continent, wx, wy end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    return addon.Clean(c)
+
+    return addon.Clean({mapID = id, x = x * 100, y = y * 100, zone = zone})
 end
 
 function ForeverVistasCapture_Capture()
-    if not controller then message("Addon is not ready yet."); return end
-    local ok, c = pcall(location)
-    if not ok or not c then message("Location timestamp unavailable; capture cancelled."); return end
-    controller.capture(c)
+    if type(Screenshot) ~= "function" then
+        message("Screenshot support is unavailable.")
+        return
+    end
+
+    local ok, capture = pcall(location)
+    if not ok or not capture then
+        message("Current zone or map coordinates are unavailable; nothing was saved.")
+        return
+    end
+
+    local tookScreenshot = pcall(Screenshot)
+    if not tookScreenshot then
+        message("Screenshot request failed; location was not saved.")
+        return
+    end
+
+    addon.AddHistory(ForeverVistasCaptureDB.history, capture)
+    addon.Refresh()
+    message("Vista captured.")
 end
 
 local events = CreateFrame("Frame")
 events:RegisterEvent("ADDON_LOADED")
--- Some clients throw for unknown events; leave capture disabled in that case.
-local successEvent = pcall(events.RegisterEvent, events, "SCREENSHOT_SUCCEEDED")
-local failureEvent = pcall(events.RegisterEvent, events, "SCREENSHOT_FAILED")
 events:SetScript("OnEvent", function(_, event, name)
-    if event == "ADDON_LOADED" and name == "ForeverVistasCapture" then
-        ForeverVistasCaptureDB = type(ForeverVistasCaptureDB) == "table" and ForeverVistasCaptureDB or {}
-        local db = ForeverVistasCaptureDB
-        local history = {}
-        if type(db.history) == "table" then
-            for i = 1, math.min(#db.history, 20) do
-                local c = addon.Clean(db.history[i])
-                if c then history[#history + 1] = c end
-            end
+    if event ~= "ADDON_LOADED" or name ~= "ForeverVistasCapture" then return end
+
+    ForeverVistasCaptureDB = type(ForeverVistasCaptureDB) == "table" and ForeverVistasCaptureDB or {}
+    local history = {}
+    if type(ForeverVistasCaptureDB.history) == "table" then
+        for i = 1, math.min(#ForeverVistasCaptureDB.history, 5) do
+            local capture = addon.Clean(ForeverVistasCaptureDB.history[i])
+            if capture then history[#history + 1] = capture end
         end
-        db.history = history
-        if not finite(db.x) or math.abs(db.x) > 10000 then db.x = nil end
-        if not finite(db.y) or math.abs(db.y) > 10000 then db.y = nil end
-        if successEvent and failureEvent and type(Screenshot) == "function" and type(C_Timer) == "table" and type(C_Timer.After) == "function" then
-            controller = addon.NewCaptureController(db.history, Screenshot, message, function() addon.Refresh() end, C_Timer.After)
-        else
-            message("Screenshot events unavailable; capture is disabled.")
-        end
-        local ok = pcall(addon.InitUI, db)
-        if not ok then message("History window unavailable on this client.") end
-    elseif controller then
-        controller.event(event)
     end
+    ForeverVistasCaptureDB.history = history
+
+    local ok = pcall(addon.InitUI, ForeverVistasCaptureDB)
+    if not ok then message("Capture window is unavailable on this client.") end
 end)
+
 SLASH_FOREVERVISTAS1 = "/fv"
 SlashCmdList.FOREVERVISTAS = function(msg)
     if msg:lower():match("^%s*capture%s*$") then
