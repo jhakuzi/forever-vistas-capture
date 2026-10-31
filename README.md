@@ -16,7 +16,7 @@ The addon records the location before requesting the screenshot, so it matches w
 
 \`FV2:mapID:x:y\`
 
-\`mapID\` is the numeric UI map ID for the zone. The Forever Vistas website resolves it to the correct illustrated zone map. \`x\` and \`y\` are in-game map percentages, rounded to two decimal places. Example: \`FV2:37:12.34:56.78\`.
+\`mapID\` is the numeric UI map ID for the zone. The Forever Vistas website resolves it to the correct illustrated zone map. \`x\` and \`y\` are in-game map percentages, rounded to two decimal places. Example: \`FV2:1429:12.34:56.78\` for Elwynn Forest.
 
 The display list includes the client's zone name only to help you choose the capture. The transmitted string deliberately uses \`mapID\`, because it is stable across game languages and unambiguous to the website.
 
