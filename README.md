@@ -4,7 +4,7 @@ A small WoW: Forever addon that takes a screenshot and remembers the zone-map po
 
 ## Install and use
 
-Copy the \`ForeverVistasCapture\` folder into the Forever client's \`Interface/AddOns\` folder, restart the client, then enable the addon. The folder and TOC must both be named \`ForeverVistasCapture\`.
+Copy the \`ForeverVistasCapture\` folder into the Forever client's \`Interface/AddOns\` folder, restart the client, then enable the addon. The folder and TOC must both be named \`ForeverVistasCapture\`. Only that folder is the addon. The \`tests\` directory is not part of it, and GitHub's source download leaves it out.
 
 - \`/fv capture\` reads your current zone map and coordinates, requests a normal screenshot, then saves the location as a recent capture.
 - \`/fv\` or the Addon Compartment entry opens the five most recent captures. Select one and press Ctrl+C in the highlighted field.
@@ -24,4 +24,4 @@ The display list includes the client's zone name only to help you choose the cap
 
 The TOC targets Forever build 70170's interface \`16001\`. The [client-generated C_Map reference](https://github.com/Atraeau/WoW-Addons/blob/main/docs/api/Map-Instances-World/C_Map.md) documents the map calls used here. Verify addon loading, current map availability, key binding, screenshot request, and copy selection in the actual Forever client.
 
-Run both \`lua tests/core.lua\` and \`lua tests/mock.lua\` from the repository root for the encoding and mocked-client checks. They do not verify the real game APIs.
+Clone the repository and run both \`lua tests/core.lua\` and \`lua tests/mock.lua\` from the repository root for the encoding and mocked-client checks. Those scripts are not included in the source download, and they do not verify the real game APIs.
