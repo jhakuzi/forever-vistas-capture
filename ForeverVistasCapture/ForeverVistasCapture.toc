@@ -2,6 +2,7 @@
 ## Title: Forever Vistas Capture
 ## Notes: Capture a screenshot and location for Forever Vistas
 ## Version: 2.0.0
+## Author: Nachten
 ## SavedVariables: ForeverVistasCaptureDB
 ## IconTexture: Interface\Icons\INV_Misc_Spyglass_03
 ## AddonCompartmentFunc: ForeverVistasCapture_CompartmentClick
