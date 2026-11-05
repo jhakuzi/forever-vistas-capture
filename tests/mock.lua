@@ -22,6 +22,11 @@ UIParent = CreateFrame("Frame")
 SlashCmdList = {}
 GetRealZoneText = function() return "Test zone" end
 Screenshot = function() screenshots = screenshots + 1 end
+time = function() return 1700000000 end
+date = function(format, timestamp)
+    assert(format == "%x %H:%M" and timestamp == 1700000000)
+    return "11/14/23 22:13"
+end
 C_Map = {
     GetBestMapForUnit = function() return 37 end,
     GetPlayerMapPosition = function()
@@ -40,9 +45,16 @@ end
 ForeverVistasCaptureDB = {history = {"bad", {mapID = 1, x = 2, y = 3, zone = "Old"}}}
 eventFrame.scripts.OnEvent(eventFrame, "ADDON_LOADED", "ForeverVistasCapture")
 assert(#ForeverVistasCaptureDB.history == 1)
+local oldRow
+for _, frame in ipairs(frames) do
+    if frame.template == "UIPanelButtonTemplate" then oldRow = frame; break end
+end
+assert(oldRow.text == "Old  |  2.00, 3.00")
 
 SlashCmdList.FOREVERVISTAS("capture")
 assert(screenshots == 1 and #ForeverVistasCaptureDB.history == 2)
+assert(ForeverVistasCaptureDB.history[1].timestamp == 1700000000)
+assert(oldRow.text == "Test zone  |  12.34, 56.78  |  11/14/23 22:13")
 
 local row, edit
 for _, frame in ipairs(frames) do
@@ -51,6 +63,10 @@ for _, frame in ipairs(frames) do
 end
 row.scripts.OnClick(row)
 assert(edit.text == "FV2:37:12.34:56.78")
+ForeverVistasCapture_Capture()
+assert(screenshots == 2 and ForeverVistasCaptureDB.history[1].timestamp == 1700000000)
+eventFrame.scripts.OnEvent(eventFrame, "ADDON_LOADED", "ForeverVistasCapture")
+assert(ForeverVistasCaptureDB.history[1].timestamp == 1700000000)
 ForeverVistasCapture_CompartmentClick()
 
 print("mock client tests passed")

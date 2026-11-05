@@ -7,7 +7,12 @@ function addon.Refresh()
         local capture = db.history[i]
         if capture then
             local zone = capture.zone ~= "" and capture.zone or "Unknown zone"
-            row:SetText(string.format("%s  |  %.2f, %.2f", zone, capture.x, capture.y))
+            local text = string.format("%s  |  %.2f, %.2f", zone, capture.x, capture.y)
+            if capture.timestamp then
+                local ok, timestamp = pcall(date, "%x %H:%M", capture.timestamp)
+                if ok and timestamp then text = text .. "  |  " .. timestamp end
+            end
+            row:SetText(text)
             row:Show()
         else
             row:Hide()
@@ -18,7 +23,7 @@ end
 function addon.InitUI(saved)
     db = saved
     window = CreateFrame("Frame", "ForeverVistasCaptureWindow", UIParent, "BasicFrameTemplateWithInset")
-    window:SetSize(420, 220)
+    window:SetSize(560, 220)
     window:SetPoint("CENTER")
     window.TitleText:SetText("Forever Vistas Capture")
 
@@ -26,7 +31,7 @@ function addon.InitUI(saved)
     for i = 1, 5 do
         local index = i
         local row = CreateFrame("Button", nil, window, "UIPanelButtonTemplate")
-        row:SetSize(380, 22)
+        row:SetSize(520, 22)
         row:SetPoint("TOPLEFT", 20, -35 - (i - 1) * 25)
         row:SetScript("OnClick", function()
             local capture = db.history[index]

@@ -18,6 +18,7 @@ function addon.Clean(c)
         x = c.x,
         y = c.y,
         zone = type(c.zone) == "string" and c.zone:sub(1, 120) or "",
+        timestamp = finite(c.timestamp) and c.timestamp >= 0 and c.timestamp <= 253402300799 and c.timestamp or nil,
     }
 end
 
@@ -78,6 +79,7 @@ function ForeverVistasCapture_Capture()
         return
     end
 
+    capture.timestamp = time()
     addon.AddHistory(ForeverVistasCaptureDB.history, capture)
     addon.Refresh()
     message("Vista captured.")

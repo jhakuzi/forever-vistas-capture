@@ -16,6 +16,8 @@ for i = 1, 6 do addon.AddHistory(history, {mapID = i, x = 1, y = 2}) end
 assert(#history == 5 and history[1].mapID == 6 and history[5].mapID == 2)
 
 local old = addon.Clean({mapID = 37, x = 44, y = 55, timestamp = 1, worldX = 7})
-assert(old and old.mapID == 37 and old.x == 44 and old.y == 55 and old.timestamp == nil)
+assert(old and old.mapID == 37 and old.x == 44 and old.y == 55 and old.timestamp == 1 and old.worldX == nil)
+assert(addon.Clean({mapID = 37, x = 44, y = 55}).timestamp == nil)
+assert(addon.Clean({mapID = 37, x = 44, y = 55, timestamp = 0 / 0}).timestamp == nil)
 
 print("core tests passed")
