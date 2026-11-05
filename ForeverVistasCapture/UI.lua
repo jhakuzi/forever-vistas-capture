@@ -74,6 +74,26 @@ function addon.InitUI(saved)
     window:Hide()
 end
 
+function addon.ShowWelcome()
+    local welcome = CreateFrame("Frame", "ForeverVistasCaptureWelcome", UIParent, "BasicFrameTemplateWithInset")
+    welcome:SetSize(460, 330)
+    welcome:SetPoint("CENTER")
+    welcome.TitleText:SetText("Welcome to Forever Vistas Capture")
+
+    local instructions = welcome:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    instructions:SetPoint("TOPLEFT", 20, -40)
+    instructions:SetPoint("RIGHT", -20, 0)
+    instructions:SetJustifyH("LEFT")
+    instructions:SetText("|cffffd1001. Capture a vista|r\nType /fv capture or use your assigned keybinding. The addon takes a screenshot and records your current zone and coordinates.\n\n|cffffd1002. Copy your location|r\nType /fv or open the addon through the Addon Compartment. Select your capture and press Ctrl+C to copy its location code.\n\n|cffffd1003. Share your screenshot|r\nVisit forevervistas.org, upload your screenshot, and paste the location code. Your zone and coordinates will be filled in automatically.")
+
+    local close = CreateFrame("Button", nil, welcome, "UIPanelButtonTemplate")
+    close:SetSize(100, 22)
+    close:SetPoint("BOTTOM", 0, 16)
+    close:SetText("Got it")
+    close:SetScript("OnClick", function() welcome:Hide() end)
+    welcome:Show()
+end
+
 function addon.ShowCopy(capture)
     if not copyWindow then return end
     copyEdit:SetText(addon.Encode(capture))

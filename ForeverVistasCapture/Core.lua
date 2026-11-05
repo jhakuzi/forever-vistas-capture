@@ -121,6 +121,7 @@ events:SetScript("OnEvent", function(_, event, name)
     end
     if event ~= "ADDON_LOADED" or name ~= "ForeverVistasCapture" then return end
 
+    local firstInstall = ForeverVistasCaptureDB == nil
     ForeverVistasCaptureDB = type(ForeverVistasCaptureDB) == "table" and ForeverVistasCaptureDB or {}
     local history = {}
     if type(ForeverVistasCaptureDB.history) == "table" then
@@ -133,6 +134,7 @@ events:SetScript("OnEvent", function(_, event, name)
 
     local ok = pcall(addon.InitUI, ForeverVistasCaptureDB)
     if not ok then message("Capture window is unavailable on this client.") end
+    if ok and firstInstall then addon.ShowWelcome() end
 end)
 
 SLASH_FOREVERVISTAS1 = "/fv"

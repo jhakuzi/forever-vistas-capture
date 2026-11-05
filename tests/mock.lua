@@ -11,7 +11,7 @@ function methods:IsShown() return self.shown end
 function methods:SetText(text) self.text = text end
 function methods:SetFocus() self.focused = true end
 function methods:HighlightText() self.highlighted = true end
-function methods:CreateFontString() return CreateFrame("FontString") end
+function methods:CreateFontString() return CreateFrame("FontString", nil, self) end
 local noop = function() end
 local mt = {__index = function(_, k) return methods[k] or noop end}
 
@@ -49,6 +49,7 @@ end
 ForeverVistasCaptureDB = {history = {"bad", {mapID = 1, x = 2, y = 3, zone = "Old"}}}
 eventFrame.scripts.OnEvent(eventFrame, "ADDON_LOADED", "ForeverVistasCapture")
 assert(#ForeverVistasCaptureDB.history == 1)
+for _, frame in ipairs(frames) do assert(frame.name ~= "ForeverVistasCaptureWelcome") end
 local oldRow
 for _, frame in ipairs(frames) do
     if frame.template == "UIPanelButtonTemplate" then oldRow = frame; break end
@@ -113,5 +114,21 @@ assert(not copyWindow.shown)
 eventFrame.scripts.OnEvent(eventFrame, "ADDON_LOADED", "ForeverVistasCapture")
 assert(ForeverVistasCaptureDB.history[1].timestamp == 1700000000)
 ForeverVistasCapture_CompartmentClick()
+
+ForeverVistasCaptureDB = nil
+eventFrame.scripts.OnEvent(eventFrame, "ADDON_LOADED", "ForeverVistasCapture")
+local welcome, dismiss, instructions
+for _, frame in ipairs(frames) do
+    if frame.name == "ForeverVistasCaptureWelcome" then welcome = frame end
+    if welcome and frame.parent == welcome and frame.text == "Got it" then dismiss = frame end
+    if welcome and frame.parent == welcome and frame.kind == "FontString" then instructions = frame end
+end
+assert(welcome and welcome.shown and dismiss and instructions)
+assert(instructions.text:find("/fv capture", 1, true) and instructions.text:find("forevervistas.org", 1, true))
+dismiss.scripts.OnClick()
+assert(not welcome.shown)
+local frameCount = #frames
+eventFrame.scripts.OnEvent(eventFrame, "ADDON_LOADED", "ForeverVistasCapture")
+for i = frameCount + 1, #frames do assert(frames[i].name ~= "ForeverVistasCaptureWelcome") end
 
 print("mock client tests passed")
