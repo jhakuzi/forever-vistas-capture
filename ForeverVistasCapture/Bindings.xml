@@ -1,5 +1,5 @@
 <Bindings>
   <Binding name="FOREVERVISTAS_CAPTURE" header="FOREVERVISTAS">
-    ForeverVistasCapture_Capture(true)
+    ForeverVistasCapture_Capture()
   </Binding>
 </Bindings>

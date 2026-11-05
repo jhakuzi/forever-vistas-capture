@@ -61,7 +61,19 @@ local function location()
     return addon.Clean({mapID = id, x = x * 100, y = y * 100, zone = zone})
 end
 
-function ForeverVistasCapture_Capture(showCopy)
+local pendingCapture
+local events = CreateFrame("Frame")
+events:RegisterEvent("ADDON_LOADED")
+local screenshotEvents = pcall(function()
+    events:RegisterEvent("SCREENSHOT_SUCCEEDED")
+    events:RegisterEvent("SCREENSHOT_FAILED")
+end)
+
+function ForeverVistasCapture_Capture()
+    if pendingCapture then
+        message("A screenshot is already in progress.")
+        return
+    end
     if type(Screenshot) ~= "function" then
         message("Screenshot support is unavailable.")
         return
@@ -73,22 +85,30 @@ function ForeverVistasCapture_Capture(showCopy)
         return
     end
 
+    addon.HideCopy()
+    capture.timestamp = time()
+    if screenshotEvents then pendingCapture = capture end
     local tookScreenshot = pcall(Screenshot)
     if not tookScreenshot then
+        pendingCapture = nil
         message("Screenshot request failed; location was not saved.")
         return
     end
 
-    capture.timestamp = time()
     addon.AddHistory(ForeverVistasCaptureDB.history, capture)
     addon.Refresh()
-    if showCopy then addon.ShowCopy(capture) end
     message("Vista captured.")
+    if not screenshotEvents then message("Copy the capture code from /fv.") end
 end
 
-local events = CreateFrame("Frame")
-events:RegisterEvent("ADDON_LOADED")
 events:SetScript("OnEvent", function(_, event, name)
+    if event == "SCREENSHOT_SUCCEEDED" or event == "SCREENSHOT_FAILED" then
+        local capture = pendingCapture
+        pendingCapture = nil
+        if capture and event == "SCREENSHOT_SUCCEEDED" then addon.ShowCopy(capture) end
+        if capture and event == "SCREENSHOT_FAILED" then message("Screenshot failed; location remains in capture history.") end
+        return
+    end
     if event ~= "ADDON_LOADED" or name ~= "ForeverVistasCapture" then return end
 
     ForeverVistasCaptureDB = type(ForeverVistasCaptureDB) == "table" and ForeverVistasCaptureDB or {}

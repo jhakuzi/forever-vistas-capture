@@ -68,17 +68,34 @@ for _, frame in ipairs(frames) do
     if frame.kind == "EditBox" and frame.parent == copyWindow then copyEdit = frame end
 end
 assert(not mainWindow.shown and not copyWindow.shown)
+ForeverVistasCapture_Capture()
+assert(screenshots == 1 and not copyWindow.shown)
+eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
+assert(copyWindow.shown and copyEdit.text == "FV2:37:12.34:56.78")
+assert(copyEdit.focused and copyEdit.highlighted and not mainWindow.shown)
 row.scripts.OnClick(row)
 assert(edit.text == "FV2:37:12.34:56.78")
-ForeverVistasCapture_Capture(true)
+Screenshot = function()
+    assert(not copyWindow.shown)
+    screenshots = screenshots + 1
+end
+ForeverVistasCapture_Capture()
 assert(screenshots == 2 and ForeverVistasCaptureDB.history[1].timestamp == 1700000000)
+assert(not copyWindow.shown and not mainWindow.shown)
+eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
 assert(copyWindow.shown and not mainWindow.shown)
 assert(copyEdit.text == "FV2:37:12.34:56.78" and copyEdit.focused and copyEdit.highlighted)
 copyEdit.scripts.OnEscapePressed()
 assert(not copyWindow.shown)
 Screenshot = function() error("failed") end
-ForeverVistasCapture_Capture(true)
+ForeverVistasCapture_Capture()
 assert(not copyWindow.shown and #ForeverVistasCaptureDB.history == 3)
+Screenshot = function() screenshots = screenshots + 1 end
+SlashCmdList.FOREVERVISTAS("capture")
+eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_FAILED")
+assert(not copyWindow.shown and #ForeverVistasCaptureDB.history == 4)
+eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
+assert(not copyWindow.shown)
 eventFrame.scripts.OnEvent(eventFrame, "ADDON_LOADED", "ForeverVistasCapture")
 assert(ForeverVistasCaptureDB.history[1].timestamp == 1700000000)
 ForeverVistasCapture_CompartmentClick()

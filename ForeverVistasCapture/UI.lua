@@ -82,6 +82,10 @@ function addon.ShowCopy(capture)
     copyEdit:HighlightText()
 end
 
+function addon.HideCopy()
+    if copyWindow then copyWindow:Hide() end
+end
+
 function addon.Toggle()
     if not window then return end
     if window:IsShown() then window:Hide() else addon.Refresh(); window:Show() end
