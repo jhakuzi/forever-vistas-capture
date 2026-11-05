@@ -62,6 +62,7 @@ local function location()
 end
 
 local pendingCapture
+local completionUncertain = false
 local events = CreateFrame("Frame")
 events:RegisterEvent("ADDON_LOADED")
 local screenshotEvents = pcall(function()
@@ -87,7 +88,7 @@ function ForeverVistasCapture_Capture()
 
     addon.HideCopy()
     capture.timestamp = time()
-    if screenshotEvents then pendingCapture = capture end
+    if screenshotEvents and not completionUncertain then pendingCapture = capture end
     local tookScreenshot = pcall(Screenshot)
     if not tookScreenshot then
         pendingCapture = nil
@@ -95,10 +96,19 @@ function ForeverVistasCapture_Capture()
         return
     end
 
+    if pendingCapture == capture then
+        C_Timer.After(5, function()
+            if pendingCapture == capture then
+                pendingCapture = nil
+                completionUncertain = true
+                message("Screenshot completion timed out; copy capture codes from /fv until reload.")
+            end
+        end)
+    end
     addon.AddHistory(ForeverVistasCaptureDB.history, capture)
     addon.Refresh()
     message("Vista captured.")
-    if not screenshotEvents then message("Copy the capture code from /fv.") end
+    if not screenshotEvents or completionUncertain then message("Copy the capture code from /fv.") end
 end
 
 events:SetScript("OnEvent", function(_, event, name)

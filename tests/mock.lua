@@ -1,5 +1,7 @@
 -- Run from repository root with Lua 5.1 or later.
 local frames, screenshots = {}, 0
+local timers = {}
+C_Timer = { After = function(seconds, callback) assert(seconds == 5); timers[#timers + 1] = callback end }
 local methods = {}
 function methods:SetScript(name, fn) self.scripts[name] = fn end
 function methods:RegisterEvent(name) self.events[name] = true end
@@ -84,6 +86,7 @@ assert(screenshots == 2 and ForeverVistasCaptureDB.history[1].timestamp == 17000
 assert(not copyWindow.shown and not mainWindow.shown)
 eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
 assert(copyWindow.shown and not mainWindow.shown)
+timers[1]() -- An old timeout must not clear a newer capture or close its popup.
 assert(copyEdit.text == "FV2:37:12.34:56.78" and copyEdit.focused and copyEdit.highlighted)
 copyEdit.scripts.OnEscapePressed()
 assert(not copyWindow.shown)
@@ -94,6 +97,17 @@ Screenshot = function() screenshots = screenshots + 1 end
 SlashCmdList.FOREVERVISTAS("capture")
 eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_FAILED")
 assert(not copyWindow.shown and #ForeverVistasCaptureDB.history == 4)
+eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
+assert(not copyWindow.shown)
+SlashCmdList.FOREVERVISTAS("capture")
+local timedOut = timers[#timers]
+timers[2]() -- A stale callback cannot clear the pending capture.
+ForeverVistasCapture_Capture()
+assert(screenshots == 4)
+timedOut()
+ForeverVistasCapture_Capture()
+assert(screenshots == 5 and not copyWindow.shown)
+eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
 eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
 assert(not copyWindow.shown)
 eventFrame.scripts.OnEvent(eventFrame, "ADDON_LOADED", "ForeverVistasCapture")
