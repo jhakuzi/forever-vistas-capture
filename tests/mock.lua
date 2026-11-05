@@ -7,12 +7,14 @@ function methods:Show() self.shown = true end
 function methods:Hide() self.shown = false end
 function methods:IsShown() return self.shown end
 function methods:SetText(text) self.text = text end
+function methods:SetFocus() self.focused = true end
+function methods:HighlightText() self.highlighted = true end
 function methods:CreateFontString() return CreateFrame("FontString") end
 local noop = function() end
 local mt = {__index = function(_, k) return methods[k] or noop end}
 
 function CreateFrame(kind, name, parent, template)
-    local frame = setmetatable({scripts = {}, events = {}, kind = kind, template = template}, mt)
+    local frame = setmetatable({scripts = {}, events = {}, kind = kind, name = name, parent = parent, template = template}, mt)
     if template == "BasicFrameTemplateWithInset" then frame.TitleText = CreateFrame("FontString") end
     frames[#frames + 1] = frame
     return frame
@@ -57,14 +59,26 @@ assert(ForeverVistasCaptureDB.history[1].timestamp == 1700000000)
 assert(oldRow.text == "Test zone  |  12.34, 56.78  |  11/14/23 22:13")
 
 local row, edit
+local mainWindow, copyWindow, copyEdit
 for _, frame in ipairs(frames) do
     if not row and frame.template == "UIPanelButtonTemplate" then row = frame end
-    if frame.kind == "EditBox" then edit = frame end
+    if frame.name == "ForeverVistasCaptureWindow" then mainWindow = frame end
+    if frame.name == "ForeverVistasCaptureCopyWindow" then copyWindow = frame end
+    if frame.kind == "EditBox" and frame.parent == mainWindow then edit = frame end
+    if frame.kind == "EditBox" and frame.parent == copyWindow then copyEdit = frame end
 end
+assert(not mainWindow.shown and not copyWindow.shown)
 row.scripts.OnClick(row)
 assert(edit.text == "FV2:37:12.34:56.78")
-ForeverVistasCapture_Capture()
+ForeverVistasCapture_Capture(true)
 assert(screenshots == 2 and ForeverVistasCaptureDB.history[1].timestamp == 1700000000)
+assert(copyWindow.shown and not mainWindow.shown)
+assert(copyEdit.text == "FV2:37:12.34:56.78" and copyEdit.focused and copyEdit.highlighted)
+copyEdit.scripts.OnEscapePressed()
+assert(not copyWindow.shown)
+Screenshot = function() error("failed") end
+ForeverVistasCapture_Capture(true)
+assert(not copyWindow.shown and #ForeverVistasCaptureDB.history == 3)
 eventFrame.scripts.OnEvent(eventFrame, "ADDON_LOADED", "ForeverVistasCapture")
 assert(ForeverVistasCaptureDB.history[1].timestamp == 1700000000)
 ForeverVistasCapture_CompartmentClick()

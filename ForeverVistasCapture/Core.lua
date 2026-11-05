@@ -61,7 +61,7 @@ local function location()
     return addon.Clean({mapID = id, x = x * 100, y = y * 100, zone = zone})
 end
 
-function ForeverVistasCapture_Capture()
+function ForeverVistasCapture_Capture(showCopy)
     if type(Screenshot) ~= "function" then
         message("Screenshot support is unavailable.")
         return
@@ -82,6 +82,7 @@ function ForeverVistasCapture_Capture()
     capture.timestamp = time()
     addon.AddHistory(ForeverVistasCaptureDB.history, capture)
     addon.Refresh()
+    if showCopy then addon.ShowCopy(capture) end
     message("Vista captured.")
 end
 

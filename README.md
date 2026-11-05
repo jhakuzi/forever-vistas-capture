@@ -9,6 +9,7 @@ Copy the **ForeverVistasCapture** folder into the game's **Interface/AddOns** fo
 - **/fv capture** reads your current zone map and coordinates, takes a normal screenshot, and saves the location as a recent capture.
 - **/fv** or the **Addon Compartment** entry opens your five most recent captures. Select one and press **Ctrl+C** in the highlighted field to copy its capture code.
 - In **Key Bindings**, assign **Capture Vista** under **Forever Vistas Capture**. There is no default shortcut, and the normal screenshot key is not used by the addon.
+- A keybound capture opens a small box with the capture code selected; press **Ctrl+C** to copy it and **Escape** to close the box.
 
 ## Capture Code Format
 

@@ -1,5 +1,5 @@
 local _, addon = ...
-local window, edit, rows, db
+local window, edit, rows, db, copyWindow, copyEdit
 
 function addon.Refresh()
     if not rows then return end
@@ -54,8 +54,32 @@ function addon.InitUI(saved)
     edit:SetAutoFocus(false)
     edit:SetScript("OnEscapePressed", edit.ClearFocus)
 
+    copyWindow = CreateFrame("Frame", "ForeverVistasCaptureCopyWindow", UIParent, "BasicFrameTemplateWithInset")
+    copyWindow:SetSize(420, 110)
+    copyWindow:SetPoint("CENTER")
+    copyWindow.TitleText:SetText("Copy capture code")
+
+    local copyLabel = copyWindow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    copyLabel:SetPoint("TOPLEFT", 20, -35)
+    copyLabel:SetText("Press Ctrl+C to copy:")
+
+    copyEdit = CreateFrame("EditBox", nil, copyWindow, "InputBoxTemplate")
+    copyEdit:SetSize(380, 24)
+    copyEdit:SetPoint("BOTTOMLEFT", 20, 17)
+    copyEdit:SetAutoFocus(false)
+    copyEdit:SetScript("OnEscapePressed", function() copyWindow:Hide() end)
+    copyWindow:Hide()
+
     addon.Refresh()
     window:Hide()
+end
+
+function addon.ShowCopy(capture)
+    if not copyWindow then return end
+    copyEdit:SetText(addon.Encode(capture))
+    copyWindow:Show()
+    copyEdit:SetFocus()
+    copyEdit:HighlightText()
 end
 
 function addon.Toggle()
