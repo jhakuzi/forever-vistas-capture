@@ -43,13 +43,13 @@ end
 
 function addon.InitUI(saved)
     db = saved
-    window = createWindow("ForeverVistasCaptureWindow", "Forever Vistas Capture", 560, 220)
+    window = createWindow("ForeverVistasCaptureWindow", "Forever Vistas Capture", 500, 220)
 
     rows = {}
     for i = 1, 5 do
         local index = i
         local row = CreateFrame("Button", nil, window, "UIPanelButtonTemplate")
-        row:SetSize(520, 22)
+        row:SetSize(460, 22)
         row:SetPoint("TOPLEFT", 20, -35 - (i - 1) * 25)
         row:SetScript("OnClick", function()
             local capture = db.history[index]
@@ -67,8 +67,9 @@ function addon.InitUI(saved)
     label:SetText("Select a capture, then press Ctrl+C:")
 
     edit = CreateFrame("EditBox", nil, window, "InputBoxTemplate")
-    edit:SetSize(380, 24)
+    edit:SetHeight(24)
     edit:SetPoint("BOTTOMLEFT", 20, 17)
+    edit:SetPoint("BOTTOMRIGHT", -20, 17)
     edit:SetAutoFocus(false)
     edit:SetScript("OnEscapePressed", edit.ClearFocus)
 
