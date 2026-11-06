@@ -1,6 +1,27 @@
 local _, addon = ...
 local window, edit, rows, db, copyWindow, copyEdit
 
+local function createWindow(name, title, width, height)
+    local frame = CreateFrame("Frame", name, UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+    frame:SetSize(width, height)
+    frame:SetPoint("CENTER")
+    frame:SetBackdrop({
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+        tile = true, tileSize = 32, edgeSize = 32,
+        insets = {left = 8, right = 8, top = 8, bottom = 8},
+    })
+    frame:SetBackdropColor(0.40, 0.28, 0.18, 1)
+    frame:SetBackdropBorderColor(0.78, 0.61, 0.38, 1)
+    local heading = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    heading:SetPoint("TOP", 0, -14)
+    heading:SetText(title)
+    local close = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+    close:SetPoint("TOPRIGHT", -4, -4)
+    close:SetScript("OnClick", function() frame:Hide() end)
+    return frame
+end
+
 function addon.Refresh()
     if not rows then return end
     for i, row in ipairs(rows) do
@@ -22,16 +43,13 @@ end
 
 function addon.InitUI(saved)
     db = saved
-    window = CreateFrame("Frame", "ForeverVistasCaptureWindow", UIParent, "BasicFrameTemplateWithInset")
-    window:SetSize(560, 220)
-    window:SetPoint("CENTER")
-    window.TitleText:SetText("Forever Vistas Capture")
+    window = createWindow("ForeverVistasCaptureWindow", "Forever Vistas Capture", 500, 220)
 
     rows = {}
     for i = 1, 5 do
         local index = i
         local row = CreateFrame("Button", nil, window, "UIPanelButtonTemplate")
-        row:SetSize(520, 22)
+        row:SetSize(460, 22)
         row:SetPoint("TOPLEFT", 20, -35 - (i - 1) * 25)
         row:SetScript("OnClick", function()
             local capture = db.history[index]
@@ -49,15 +67,13 @@ function addon.InitUI(saved)
     label:SetText("Select a capture, then press Ctrl+C:")
 
     edit = CreateFrame("EditBox", nil, window, "InputBoxTemplate")
-    edit:SetSize(380, 24)
+    edit:SetHeight(24)
     edit:SetPoint("BOTTOMLEFT", 20, 17)
+    edit:SetPoint("BOTTOMRIGHT", -20, 17)
     edit:SetAutoFocus(false)
     edit:SetScript("OnEscapePressed", edit.ClearFocus)
 
-    copyWindow = CreateFrame("Frame", "ForeverVistasCaptureCopyWindow", UIParent, "BasicFrameTemplateWithInset")
-    copyWindow:SetSize(420, 110)
-    copyWindow:SetPoint("CENTER")
-    copyWindow.TitleText:SetText("Copy capture code")
+    copyWindow = createWindow("ForeverVistasCaptureCopyWindow", "Copy capture code", 420, 110)
 
     local copyLabel = copyWindow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     copyLabel:SetPoint("TOPLEFT", 20, -35)
@@ -75,10 +91,7 @@ function addon.InitUI(saved)
 end
 
 function addon.ShowWelcome()
-    local welcome = CreateFrame("Frame", "ForeverVistasCaptureWelcome", UIParent, "BasicFrameTemplateWithInset")
-    welcome:SetSize(460, 330)
-    welcome:SetPoint("CENTER")
-    welcome.TitleText:SetText("Welcome to Forever Vistas Capture")
+    local welcome = createWindow("ForeverVistasCaptureWelcome", "Welcome to Forever Vistas Capture", 460, 330)
 
     local instructions = welcome:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     instructions:SetPoint("TOPLEFT", 20, -40)
