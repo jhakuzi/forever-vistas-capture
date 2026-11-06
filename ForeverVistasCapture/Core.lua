@@ -38,6 +38,28 @@ local function message(s)
     print("|cff66ccffForever Vistas:|r " .. s)
 end
 
+-- A continent is not a zone: its coordinates cannot be used on a zone map.
+-- Only use a uniquely named child zone, and ask the client for its coordinates.
+local function zoneMap(id, zone)
+    if type(C_Map.GetMapInfo) ~= "function" then return nil end
+    local ok, info = pcall(C_Map.GetMapInfo, id)
+    if not ok or type(info) ~= "table" then return nil end
+    local zoneType = Enum and Enum.UIMapType and Enum.UIMapType.Zone or 3
+    local continentType = Enum and Enum.UIMapType and Enum.UIMapType.Continent or 2
+    if info.mapType == zoneType then return id end
+    if info.mapType ~= continentType or type(zone) ~= "string" or zone == "" or type(C_Map.GetMapChildrenInfo) ~= "function" then return nil end
+    local got, children = pcall(C_Map.GetMapChildrenInfo, id, zoneType, false)
+    if not got or type(children) ~= "table" then return nil end
+    local found
+    for _, child in ipairs(children) do
+        if type(child) == "table" and child.mapType == zoneType and child.name == zone and mapID(child.mapID) then
+            if found then return nil end
+            found = child.mapID
+        end
+    end
+    return found
+end
+
 local function location()
     if type(C_Map) ~= "table" or type(C_Map.GetBestMapForUnit) ~= "function" or type(C_Map.GetPlayerMapPosition) ~= "function" then
         return nil
@@ -46,17 +68,19 @@ local function location()
     local ok, id = pcall(C_Map.GetBestMapForUnit, "player")
     if not ok or not mapID(id) then return nil end
 
+    local zone = ""
+    if type(GetRealZoneText) == "function" then
+        local haveZone, name = pcall(GetRealZoneText)
+        if haveZone and type(name) == "string" then zone = name end
+    end
+    id = zoneMap(id, zone)
+    if not id then return nil end
+
     local got, position = pcall(C_Map.GetPlayerMapPosition, id, "player")
     if not got or not position then return nil end
 
     local haveXY, x, y = pcall(function() return position:GetXY() end)
     if not haveXY then return nil end
-
-    local zone = ""
-    if type(GetRealZoneText) == "function" then
-        local haveZone, name = pcall(GetRealZoneText)
-        if haveZone then zone = name end
-    end
 
     return addon.Clean({mapID = id, x = x * 100, y = y * 100, zone = zone})
 end

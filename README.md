@@ -19,6 +19,8 @@ Copy the **ForeverVistasCapture** folder into the game's **Interface/AddOns** fo
 
 **x** and **y** are in-game map coordinates.
 
+If the client returns a continent instead of a zone, the addon requires a unique child map matching the game's current zone name and reads coordinates on that zone map. If it cannot establish a zone and position, it reports that the location is unavailable and saves nothing. Continent coordinates from older capture codes cannot be converted by the website.
+
 **Example:** **FV2:1429:12.34:56.78** (Elwynn Forest)
 
 The capture list displays the game's zone name to help you identify each screenshot. The copied capture code deliberately uses **mapID** instead of the zone name because numeric map IDs are independent of the game's language settings.
