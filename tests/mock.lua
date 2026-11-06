@@ -33,6 +33,7 @@ date = function(format, timestamp)
 end
 C_Map = {
     GetBestMapForUnit = function() return 37 end,
+    GetMapInfo = function(id) return {mapID = id, mapType = 3} end,
     GetPlayerMapPosition = function()
         return {GetXY = function() return 0.1234, 0.5678 end}
     end,
@@ -130,5 +131,37 @@ assert(not welcome.shown)
 local frameCount = #frames
 eventFrame.scripts.OnEvent(eventFrame, "ADDON_LOADED", "ForeverVistasCapture")
 for i = frameCount + 1, #frames do assert(frames[i].name ~= "ForeverVistasCaptureWelcome") end
+
+-- A continent result must use the matching zone's own coordinates, never continent coordinates.
+C_Map.GetBestMapForUnit = function() return 1414 end
+C_Map.GetMapInfo = function(id) assert(id == 1414); return {mapID=id, mapType=2} end
+C_Map.GetMapChildrenInfo = function(id, kind, descendants)
+    assert(id == 1414 and kind == 3 and descendants == false)
+    return {{mapID=1413, mapType=3, name="Test zone"}, {mapID=1440, mapType=3, name="Other zone"}}
+end
+C_Map.GetPlayerMapPosition = function(id)
+    assert(id == 1413)
+    return {GetXY = function() return 0.1234, 0.5678 end}
+end
+local before = screenshots
+ForeverVistasCapture_Capture()
+assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV2:1413:12.34:56.78")
+C_Map.GetMapChildrenInfo = function() return {{mapID=1413, mapType=3, name="Test zone"}, {mapID=1440, mapType=3, name="Test zone"}} end
+before = screenshots
+ForeverVistasCapture_Capture()
+assert(screenshots == before)
+C_Map.GetMapChildrenInfo = function() return {} end
+ForeverVistasCapture_Capture()
+assert(screenshots == before)
+C_Map.GetMapChildrenInfo = function() return {{mapID=1413, mapType=3, name="Test zone"}} end
+C_Map.GetPlayerMapPosition = function() return nil end
+ForeverVistasCapture_Capture()
+assert(screenshots == before)
+C_Map.GetPlayerMapPosition = function() return {GetXY = function() return 1.01, 0.5 end} end
+ForeverVistasCapture_Capture()
+assert(screenshots == before)
+C_Map.GetMapChildrenInfo = nil
+ForeverVistasCapture_Capture()
+assert(screenshots == before)
 
 print("mock client tests passed")
