@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: Forever Vistas Capture
 ## Notes: Capture a screenshot and location for Forever Vistas
-## Version: 2.0.2
+## Version: 2.0.3
 ## Author: Nachten
 ## SavedVariables: ForeverVistasCaptureDB
 ## IconTexture: Interface\AddOns\ForeverVistasCapture\media\icon.tga
