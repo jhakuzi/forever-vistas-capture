@@ -27,8 +27,8 @@ function addon.Refresh()
     for i, row in ipairs(rows) do
         local capture = db.history[i]
         if capture then
-            local zone = capture.zone ~= "" and capture.zone or "Unknown zone"
-            local text = string.format("%s  |  %.2f, %.2f", zone, capture.x, capture.y)
+            local zone = capture.name and capture.name ~= "" and capture.name or (capture.zone ~= "" and capture.zone or "Unknown location")
+            local text = capture.x and capture.y and string.format("%s  |  %.2f, %.2f", zone, capture.x, capture.y) or zone
             if capture.timestamp then
                 local ok, timestamp = pcall(date, "%x %H:%M", capture.timestamp)
                 if ok and timestamp then text = text .. "  |  " .. timestamp end

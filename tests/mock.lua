@@ -146,22 +146,43 @@ end
 local before = screenshots
 ForeverVistasCapture_Capture()
 assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV2:1413:12.34:56.78")
+eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
 C_Map.GetMapChildrenInfo = function() return {{mapID=1413, mapType=3, name="Test zone"}, {mapID=1440, mapType=3, name="Test zone"}} end
+GetInstanceInfo = function() return "The Deadmines", "party" end
 before = screenshots
 ForeverVistasCapture_Capture()
-assert(screenshots == before)
-C_Map.GetMapChildrenInfo = function() return {} end
+assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:DUNGEON:The%20Deadmines")
+eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
+GetInstanceInfo = function() return "Molten Core", "raid" end
+before = screenshots
 ForeverVistasCapture_Capture()
-assert(screenshots == before)
+assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:RAID:Molten%20Core")
+eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
+GetInstanceInfo = nil
+before = screenshots
+ForeverVistasCapture_Capture()
+assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:UNKNOWN:Test%20zone")
+eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
+C_Map.GetMapChildrenInfo = function() return {} end
+before = screenshots
+ForeverVistasCapture_Capture()
+assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:UNKNOWN:Test%20zone")
+eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
 C_Map.GetMapChildrenInfo = function() return {{mapID=1413, mapType=3, name="Test zone"}} end
 C_Map.GetPlayerMapPosition = function() return nil end
+before = screenshots
 ForeverVistasCapture_Capture()
-assert(screenshots == before)
+assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:UNKNOWN:Test%20zone")
+eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
 C_Map.GetPlayerMapPosition = function() return {GetXY = function() return 1.01, 0.5 end} end
+before = screenshots
 ForeverVistasCapture_Capture()
-assert(screenshots == before)
+assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:UNKNOWN:Test%20zone")
+eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
 C_Map.GetMapChildrenInfo = nil
+before = screenshots
 ForeverVistasCapture_Capture()
-assert(screenshots == before)
+assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:UNKNOWN:Test%20zone")
+eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
 
 print("mock client tests passed")

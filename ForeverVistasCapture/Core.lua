@@ -11,22 +11,48 @@ local function mapID(n)
 end
 
 function addon.Clean(c)
-    if type(c) ~= "table" or not mapID(c.mapID) then return nil end
-    if not finite(c.x) or not finite(c.y) or c.x < 0 or c.x > 100 or c.y < 0 or c.y > 100 then return nil end
-    return {
-        mapID = c.mapID,
-        x = c.x,
-        y = c.y,
-        zone = type(c.zone) == "string" and c.zone:sub(1, 120) or "",
-        timestamp = finite(c.timestamp) and c.timestamp >= 0 and c.timestamp <= 253402300799 and c.timestamp or nil,
-    }
+    if type(c) ~= "table" then return nil end
+    local cleaned = {zone = type(c.zone) == "string" and c.zone:sub(1, 120) or "", timestamp = finite(c.timestamp) and c.timestamp >= 0 and c.timestamp <= 253402300799 and c.timestamp or nil}
+    if mapID(c.mapID) and finite(c.x) and finite(c.y) and c.x >= 0 and c.x <= 100 and c.y >= 0 and c.y <= 100 then
+        cleaned.mapID, cleaned.x, cleaned.y = c.mapID, c.x, c.y
+        return cleaned
+    end
+    if (c.kind == "DUNGEON" or c.kind == "RAID" or c.kind == "UNKNOWN") and type(c.name) == "string" and #c.name <= 120 and not c.name:find("[%c]") then
+        cleaned.kind, cleaned.name = c.kind, c.name
+        return cleaned
+    end
+    return nil
 end
 
 -- The numeric UI map ID identifies the zone. The site resolves it to its zone map.
 function addon.Encode(c)
     c = addon.Clean(c)
     if not c then return nil end
-    return string.format("FV2:%d:%.2f:%.2f", c.mapID, c.x, c.y)
+    if c.mapID then return string.format("FV2:%d:%.2f:%.2f", c.mapID, c.x, c.y) end
+    local encoded = c.name:gsub("([^%w%-_%.~])", function(char) return string.format("%%%02X", string.byte(char)) end)
+    return "FV3:" .. c.kind .. ":" .. encoded
+end
+
+local function placeName()
+    if type(GetRealZoneText) == "function" then local ok, name = pcall(GetRealZoneText); if ok and type(name) == "string" and name ~= "" then return name:sub(1, 120) end end
+    if type(GetSubZoneText) == "function" then local ok, name = pcall(GetSubZoneText); if ok and type(name) == "string" and name ~= "" then return name:sub(1, 120) end end
+    return ""
+end
+
+local location
+local function captureLocation()
+    local name = placeName()
+    if type(GetInstanceInfo) == "function" then
+        local ok, instance, instanceType = pcall(GetInstanceInfo)
+        if ok and type(instance) == "string" and instance ~= "" then
+            instance = instance:gsub("[%c]", ""):sub(1, 120)
+            if instanceType == "party" then return addon.Clean({kind="DUNGEON", name=instance}) end
+            if instanceType == "raid" then return addon.Clean({kind="RAID", name=instance}) end
+        end
+    end
+    local ok, capture = pcall(location)
+    if ok and capture then return capture end
+    return addon.Clean({kind="UNKNOWN", name=name})
 end
 
 function addon.AddHistory(history, capture)
@@ -60,7 +86,7 @@ local function zoneMap(id, zone)
     return found
 end
 
-local function location()
+location = function()
     if type(C_Map) ~= "table" or type(C_Map.GetBestMapForUnit) ~= "function" or type(C_Map.GetPlayerMapPosition) ~= "function" then
         return nil
     end
@@ -104,11 +130,7 @@ function ForeverVistasCapture_Capture()
         return
     end
 
-    local ok, capture = pcall(location)
-    if not ok or not capture then
-        message("Current zone or map coordinates are unavailable; nothing was saved.")
-        return
-    end
+    local capture = captureLocation()
 
     addon.HideCopy()
     capture.timestamp = time()

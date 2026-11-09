@@ -10,6 +10,10 @@ local capture = {mapID = 12, x = 12.346, y = 67.891, zone = "Elwynn Forest"}
 assert(addon.Encode(capture) == "FV2:12:12.35:67.89")
 assert(addon.Encode({mapID = 12, x = -1, y = 2}) == nil)
 assert(addon.Encode({mapID = 0 / 0, x = 1, y = 2}) == nil)
+assert(addon.Encode({kind="DUNGEON",name="The Deadmines"}) == "FV3:DUNGEON:The%20Deadmines")
+assert(addon.Encode({kind="RAID",name="Molten Core"}) == "FV3:RAID:Molten%20Core")
+assert(addon.Encode({kind="UNKNOWN",name=""}) == "FV3:UNKNOWN:")
+assert(addon.Encode({kind="DUNGEON",name=string.rep("x",121)}) == nil)
 
 local history = {}
 for i = 1, 6 do addon.AddHistory(history, {mapID = i, x = 1, y = 2}) end
