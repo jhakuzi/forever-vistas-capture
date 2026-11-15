@@ -77,7 +77,7 @@ function addon.InitUI(saved)
 
     local copyLabel = copyWindow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     copyLabel:SetPoint("TOPLEFT", 20, -34)
-    copyLabel:SetText("Click Copy, then press Ctrl+C")
+    copyLabel:SetText("Press Ctrl+C to copy:")
 
     copyEdit = CreateFrame("EditBox", nil, copyWindow, "InputBoxTemplate")
     copyEdit:SetSize(380, 24)
