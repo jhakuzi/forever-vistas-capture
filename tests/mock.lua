@@ -77,6 +77,14 @@ assert(screenshots == 1 and not copyWindow.shown)
 eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
 assert(copyWindow.shown and copyEdit.text == "FV2:37:12.34:56.78")
 assert(copyEdit.focused and copyEdit.highlighted and not mainWindow.shown)
+local copyButton
+for _, frame in ipairs(frames) do
+    if frame.parent == copyWindow and frame.text == "Copy" then copyButton = frame end
+end
+assert(copyButton)
+copyEdit.focused, copyEdit.highlighted = false, false
+copyButton.scripts.OnClick(copyButton)
+assert(copyEdit.focused and copyEdit.highlighted)
 row.scripts.OnClick(row)
 assert(edit.text == "FV2:37:12.34:56.78")
 Screenshot = function()

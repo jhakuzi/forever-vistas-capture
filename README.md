@@ -9,7 +9,7 @@ Copy the **ForeverVistasCapture** folder into the game's **Interface/AddOns** fo
 - **/fv capture** takes a normal screenshot and saves the best available location as a recent capture. In a dungeon or raid it records the instance name; if location data is unavailable it still takes the screenshot.
 - **/fv** or the **Addon Compartment** entry opens your five most recent captures. Select one and press **Ctrl+C** in the highlighted field to copy its capture code.
 - In **Key Bindings**, assign **Capture Vista** under **Forever Vistas Capture**. There is no default shortcut, and the normal screenshot key is not used by the addon.
-- After a capture's screenshot completes, a small box opens with the capture code selected; press **Ctrl+C** to copy it and **Escape** to close the box.
+- After a capture's screenshot completes, a small box opens with the capture code and a **Copy** button. Click **Copy** so the code is selected, press **Ctrl+C**, then **Escape** to close the box.
 
 ## Capture Code Format
 
