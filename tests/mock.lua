@@ -161,28 +161,55 @@ eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
 GetInstanceInfo = nil
 before = screenshots
 ForeverVistasCapture_Capture()
-assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:UNKNOWN:Test%20zone")
+assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:UNKNOWN:")
 eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
 C_Map.GetMapChildrenInfo = function() return {} end
 before = screenshots
 ForeverVistasCapture_Capture()
-assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:UNKNOWN:Test%20zone")
+assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:UNKNOWN:")
 eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
 C_Map.GetMapChildrenInfo = function() return {{mapID=1413, mapType=3, name="Test zone"}} end
 C_Map.GetPlayerMapPosition = function() return nil end
 before = screenshots
 ForeverVistasCapture_Capture()
-assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:UNKNOWN:Test%20zone")
+assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:UNKNOWN:")
 eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
 C_Map.GetPlayerMapPosition = function() return {GetXY = function() return 1.01, 0.5 end} end
 before = screenshots
 ForeverVistasCapture_Capture()
-assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:UNKNOWN:Test%20zone")
+assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:UNKNOWN:")
 eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
 C_Map.GetMapChildrenInfo = nil
 before = screenshots
 ForeverVistasCapture_Capture()
-assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:UNKNOWN:Test%20zone")
+assert(screenshots == before + 1 and addon.Encode(ForeverVistasCaptureDB.history[1]) == "FV3:UNKNOWN:")
 eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
+
+-- The eighth GetInstanceInfo result is kept across SavedVariables cleanup.
+ForeverVistasCaptureDB = {history = {
+    {kind="DUNGEON", name="Die Todesminen"},
+    {mapID=1429, x=12.34, y=56.78, zone="Elwynn"},
+}}
+eventFrame.scripts.OnEvent(eventFrame, "ADDON_LOADED", "ForeverVistasCapture")
+GetInstanceInfo = function() return "Die Versunkene Stadt", "party", 1, "Normal", 5, false, false, 2970, 5 end
+ForeverVistasCapture_Capture()
+eventFrame.scripts.OnEvent(eventFrame, "SCREENSHOT_SUCCEEDED")
+local previousFrameCount = #frames
+eventFrame.scripts.OnEvent(eventFrame, "ADDON_LOADED", "ForeverVistasCapture")
+assert(#ForeverVistasCaptureDB.history == 3)
+assert(ForeverVistasCaptureDB.history[1].name == "Die Versunkene Stadt")
+local historyWindow, historyEdit, historyRows = nil, nil, {}
+for i = previousFrameCount + 1, #frames do
+    local frame = frames[i]
+    if frame.name == "ForeverVistasCaptureWindow" then historyWindow = frame end
+    if frame.parent == historyWindow and frame.kind == "EditBox" then historyEdit = frame end
+    if frame.parent == historyWindow and frame.template == "UIPanelButtonTemplate" then
+        historyRows[#historyRows + 1] = frame
+    end
+end
+for i, expected in ipairs({"FV4:DUNGEON:2970", "FV3:DUNGEON:Die%20Todesminen", "FV2:1429:12.34:56.78"}) do
+    historyRows[i].scripts.OnClick(historyRows[i])
+    assert(historyEdit.text == expected)
+end
 
 print("mock client tests passed")

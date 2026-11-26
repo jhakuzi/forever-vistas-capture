@@ -17,7 +17,14 @@ function addon.Clean(c)
         cleaned.mapID, cleaned.x, cleaned.y = c.mapID, c.x, c.y
         return cleaned
     end
-    if (c.kind == "DUNGEON" or c.kind == "RAID" or c.kind == "UNKNOWN") and type(c.name) == "string" and #c.name <= 120 and not c.name:find("[%c]") then
+    local indoor = c.kind == "DUNGEON" or c.kind == "RAID"
+    local validName = type(c.name) == "string" and #c.name <= 120 and not c.name:find("[%c]")
+    if indoor and mapID(c.instanceID) and c.instanceID > 0 then
+        cleaned.kind, cleaned.instanceID = c.kind, c.instanceID
+        if validName then cleaned.name = c.name end
+        return cleaned
+    end
+    if (indoor or c.kind == "UNKNOWN") and validName then
         cleaned.kind, cleaned.name = c.kind, c.name
         return cleaned
     end
@@ -29,6 +36,7 @@ function addon.Encode(c)
     c = addon.Clean(c)
     if not c then return nil end
     if c.mapID then return string.format("FV2:%d:%.2f:%.2f", c.mapID, c.x, c.y) end
+    if c.instanceID then return string.format("FV4:%s:%d", c.kind, c.instanceID) end
     local encoded = c.name:gsub("([^%w%-_%.~])", function(char) return string.format("%%%02X", string.byte(char)) end)
     return "FV3:" .. c.kind .. ":" .. encoded
 end
@@ -43,16 +51,22 @@ local location
 local function captureLocation()
     local name = placeName()
     if type(GetInstanceInfo) == "function" then
-        local ok, instance, instanceType = pcall(GetInstanceInfo)
-        if ok and type(instance) == "string" and instance ~= "" then
-            instance = instance:gsub("[%c]", ""):sub(1, 120)
-            if instanceType == "party" then return addon.Clean({kind="DUNGEON", name=instance}) end
-            if instanceType == "raid" then return addon.Clean({kind="RAID", name=instance}) end
+        -- GetInstanceInfo's eighth result is the instance's Map ID.
+        local ok, instance, instanceType, _, _, _, _, _, instanceID = pcall(GetInstanceInfo)
+        if ok and (instanceType == "party" or instanceType == "raid") then
+            local kind = instanceType == "party" and "DUNGEON" or "RAID"
+            if type(instance) == "string" and instance ~= "" then
+                instance = instance:gsub("[%c]", ""):sub(1, 120)
+            else
+                instance = nil
+            end
+            local capture = addon.Clean({kind=kind, name=instance, instanceID=instanceID})
+            if capture then return capture end
         end
     end
     local ok, capture = pcall(location)
     if ok and capture then return capture end
-    return addon.Clean({kind="UNKNOWN", name=name})
+    return addon.Clean({kind="UNKNOWN", name="", zone=name})
 end
 
 function addon.AddHistory(history, capture)
